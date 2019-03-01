@@ -58,7 +58,7 @@ def mlParams(X, labels, W=None):
     assert(X.shape[0]==labels.shape[0])
     Npts,Ndims = np.shape(X)
     classes = np.unique(labels)
-    Nclasses = np.size(classes)
+    Nclasses = np.size(classes)#
 
     if W is None:
         W = np.ones((Npts,1))/float(Npts)
@@ -68,7 +68,17 @@ def mlParams(X, labels, W=None):
 
     # TODO: fill in the code to compute mu and sigma!
     # ==========================
-    
+    for j, C in enumerate(classses):
+        i = np.where(labels == C)[0]#save the corresponding class labels place into i with c number of column
+        xlc = X[i,:]#get x (length d) according to class label as the matrix (Cxd)
+        mu[j]=np.sum(xlc,axis=0)/np.size(i)#list the means of each classes of d indices(Cxd)
+
+    for j, C in enumerate(classes):
+        i = np.where(labels == C)[0]
+        xlc = X[i,:]
+        mu[j]=np.sum(xlc,axis=0)/np.size(i)
+        var=np.subtract(xlc,mu[j]) #calculation of (xi-mu)
+        sigma=np.diag(np.diag(np.dot(np.transpose(var),var)))/np.size(i)#calculation of sigma((xi-mu)^2)/Nk with (m,n)=0 m≠n
     # ==========================
 
     return mu, sigma
