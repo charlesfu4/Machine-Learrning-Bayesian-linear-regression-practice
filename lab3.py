@@ -44,7 +44,9 @@ def computePrior(labels, W=None):
 
     # TODO: compute the values of prior for each class!
     # ==========================
-    
+    for j, C in enumerate(classes):
+        i=np.where(labels == C)[0]
+        prior[j]=np.size(i)/Nclasses
     # ==========================
 
     return prior
@@ -96,12 +98,19 @@ def classifyBayes(X, prior, mu, sigma):
 
     # TODO: fill in the code to compute the log posterior logProb!
     # ==========================
-    
+    for i in range(0,Nclasses): #iterate over each class
+        var=X-mu[i]#x-µk(µ cooresponding to each class)
+        lnsigma=np.log(np.linalg.det(sigma[i]))#get ln(|sigma|) for each class
+        lnprior=nplog(prior)
+        for j in range(0,Npts): #iterate over each data points
+            logProb[i][j]=-0.5*lnsigma-0.5*np.inner(np.inner(var[j],np.inverse(sigma[i]),np.transpose(var[j])))+lnprior
+            
+
     # ==========================
     
     # one possible way of finding max a-posteriori once
     # you have computed the log posterior
-    h = np.argmax(logProb,axis=0)
+    h = np.argmax(logProb,axis=0)#acquire the max log posterior in each classs and save it to h(1xN)
     return h
 
 

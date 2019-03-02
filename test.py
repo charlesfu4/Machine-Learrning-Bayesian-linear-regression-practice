@@ -12,7 +12,6 @@ Nclasses=np.size(classes)
 mu=np.zeros((Nclasses,3))
 W = np.ones((6,1))/float(6)
 sig = np.zeros((Nclasses,3,3))
-print(classes)
 
 for jdx,c in enumerate(classes):
     idx = np.where(labels==c)[0]
