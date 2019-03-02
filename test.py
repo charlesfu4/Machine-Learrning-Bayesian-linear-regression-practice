@@ -12,6 +12,7 @@ Nclasses=np.size(classes)
 mu=np.zeros((Nclasses,3))
 W = np.ones((6,1))/float(6)
 sig = np.zeros((Nclasses,3,3))
+prior= np.zeros((Nclasses,1))
 
 for jdx,c in enumerate(classes):
     idx = np.where(labels==c)[0]
@@ -27,5 +28,11 @@ for jdx,c in enumerate(classes):
     mu[jdx]=np.sum(xlc,axis=0)/np.size(idx)
     var=np.subtract(xlc,mu[jdx])
     sig[jdx]=np.diag(np.diag(np.dot(np.transpose(var),var)/float(np.size(idx))))
-   
-print(sig)   
+
+for jdx, c in enumerate(classes):
+    idx = np.where(labels == c)[0]
+    prior[jdx] = np.sum(W[idx])/np.sum(W[:])
+print(prior.shape)    
+print(sig.shape)
+print(sig)
+print(mu.shape)

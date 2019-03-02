@@ -46,7 +46,7 @@ def computePrior(labels, W=None):
     # ==========================
     for j, C in enumerate(classes):
         i=np.where(labels == C)[0]
-        prior[j]=np.size(i)/Nclasses
+        prior[j]=np.sum(W[i])/1
     # ==========================
 
     return prior
@@ -70,17 +70,17 @@ def mlParams(X, labels, W=None):
 
     # TODO: fill in the code to compute mu and sigma!
     # ==========================
-    for j, C in enumerate(classses):
+    for j, C in enumerate(classes):
         i = np.where(labels == C)[0]#save the corresponding class labels place into i with c number of column
         xlc = X[i,:]#get x (length d) according to class label as the matrix (Cxd)
-        mu[j]=np.sum(xlc,axis=0)/np.size(i)#list the means of each classes of d indices(Cxd)
+        mu[j]=np.sum(xlc,axis=0)*W[i]/np.sum(W[i])#list the means of each classes of d indices(Cxd)
 
     for j, C in enumerate(classes):
         i = np.where(labels == C)[0]
         xlc = X[i,:]
         mu[j]=np.sum(xlc,axis=0)/np.size(i)
         var=np.subtract(xlc,mu[j]) #calculation of (xi-mu)
-        sigma=np.diag(np.diag(np.dot(np.transpose(var),var)))/np.size(i)#calculation of sigma((xi-mu)^2)/Nk with (m,n)=0 m≠n
+        sigma[j]=np.diag(np.diag(W[i]*np.dot(np.transpose(var),var)))/np.sum(W[i])#calculation of sigma((xi-mu)^2)/Nk with (m,n)=0 m≠n
     # ==========================
 
     return mu, sigma
@@ -98,12 +98,12 @@ def classifyBayes(X, prior, mu, sigma):
 
     # TODO: fill in the code to compute the log posterior logProb!
     # ==========================
-    for i in range(0,Nclasses): #iterate over each class
+    for i in range(Nclasses): #iterate over each class
         var=X-mu[i]#x-µk(µ cooresponding to each class)
         lnsigma=np.log(np.linalg.det(sigma[i]))#get ln(|sigma|) for each class
-        lnprior=nplog(prior)
-        for j in range(0,Npts): #iterate over each data points
-            logProb[i][j]=-0.5*lnsigma-0.5*np.inner(np.inner(var[j],np.inverse(sigma[i]),np.transpose(var[j])))+lnprior
+        lnprior=np.log(prior[i])
+        for j in range(Npts): #iterate over each data points
+            logProb[i][j]=-0.5*lnsigma-0.5*np.dot(np.dot(var[j],np.linalg.inv(sigma[i])),var[j])+lnprior
             
 
     # ==========================
@@ -112,7 +112,6 @@ def classifyBayes(X, prior, mu, sigma):
     # you have computed the log posterior
     h = np.argmax(logProb,axis=0)#acquire the max log posterior in each classs and save it to h(1xN)
     return h
-
 
 # The implemented functions can now be summarized into the `BayesClassifier` class, which we will use later to test the classifier, no need to add anything else here:
 
@@ -146,16 +145,16 @@ plotGaussian(X,labels,mu,sigma)
 # Call the `testClassifier` and `plotBoundary` functions for this part.
 
 
-#testClassifier(BayesClassifier(), dataset='iris', split=0.7)
+#testClassifier(BayesClassifier(), dataset='iris', split=0.5)
 
 
 
-#testClassifier(BayesClassifier(), dataset='vowel', split=0.7)
+#testClassifier(BayesClassifier(), dataset='vowel', split=0.5)
 
 
 
-#plotBoundary(BayesClassifier(), dataset='iris',split=0.7)
-
+#plotBoundary(BayesClassifier(), dataset='iris',split=0.5)
+#plotBoundary(BayesClassifier(), dataset='vowel',split=0.7) 
 
 # ## Boosting functions to implement
 # 
