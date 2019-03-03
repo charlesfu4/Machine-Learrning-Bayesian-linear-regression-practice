@@ -27,7 +27,8 @@ for jdx,c in enumerate(classes):
     xlc=X[idx,:]
     mu[jdx]=np.sum(xlc,axis=0)/np.size(idx)
     var=np.subtract(xlc,mu[jdx])
-    sig[jdx]=np.diag(np.diag(np.dot(np.transpose(var),var)/float(np.size(idx))))
+    var=np.square(var)
+    sig[jdx]=np.diag(np.diag(var))/float(np.size(idx))
 
 for jdx, c in enumerate(classes):
     idx = np.where(labels == c)[0]
