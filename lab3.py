@@ -73,18 +73,14 @@ def mlParams(X, labels, W):
     for j, C in enumerate(classes):
         i = np.where(labels == C)[0]#save the corresponding class labels place into i with c number of column
         xlc = X[i,:]*W[i]#get x (length d) according to class label as the matrix (Cxd)
-        mu[j]=np.sum(xlc,axis=0)/np.sum(W[i])#list the means of each classes of d indices(Cxd)
-
+        mu[j]=np.sum(xlc,axis=0)/np.sum(W[i])#list the means of each classes of d indices(Cxd) 
     for j, C in enumerate(classes):
-        i = np.where(labels == C)[0]
-        xlc = X[i,:]
-        mu[j]=np.sum(xlc,axis=0)/np.size(i)
-        var=np.subtract(xlc,mu[j])
-        var=np.square(var)
-        mean=W[i]*np.sum(var,axis=0)
-        sigma[j]=np.diag(np.diag(var))/np.sum(W[i])
-
-        # Use diagonal matrix for Naive Bayes Classifier
+        i = np.where(labels == C)[0] # Vector of length C of indices for a given label class c
+        xlc = X[i, :] # Matrix  C x d with samples in the class c
+        diff = xlc - mu[j] # Matrix  C x d with diffs between x - µ
+        diff = np.square(diff) * W[i]
+        mean = np.sum(diff, axis=0) / np.sum(W[i])
+        sigma[j] = np.diag(mean) # Use diagonal matrix for Naive Bayes Classier
     # ==========================
 
     return mu, sigma
@@ -182,24 +178,23 @@ def trainBoost(base_classifier, X, labels, T=10):
     for i_iter in range(0, T):
         # a new classifier can be trained like this, given the current weights
         classifiers.append(base_classifier.trainClassifier(X, labels, wCur))
-
         # do classification for each point
         vote = classifiers[-1].classify(X)
-        
+        classes=np.unique(labels)
         # TODO: Fill in the rest, construct the alphas etc.
         # ==========================
         epis=0
-        for i in range(0,Npts):
-            err=wCur[i]*(1-(labels[i]==vote[i]))
-            epis+=err
-        alpha=0.5*(np.log(1-epis)-np.log(epis))
-        alphas.append(alpha)# you will need to append the new alpha
-        Z_t=np.sum(wCur)
-        for i in range(0,Npts):
-            if(vote[i]==labels[i]):
-                wCur[i]=wCur[i]/Z_t*np.exp(-alpha)
-            else:
-                wCur[i]=wCur[i]/Z_t*np.exp(alpha)
+        classes=np.unique(labels)
+        for j in classes:    
+            i = np.where(vote == j)[0]
+            epis += np.sum(np.transpose(wCur[i])*(1-(j == labels[i])))
+
+        alpha = (np.log(1 - epis) - np.log(epis)) / 2 # Compute new alpha
+        alphas.append(alpha) # you will need to append the new alpha
+         
+        for i in range(Npts):
+            wCur[i] = wCur[i] * np.exp(alpha * (-1)**(vote[i]==labels[i]))
+        wCur = wCur/np.sum(wCur)
         # ==========================
         
     return classifiers, alphas
@@ -257,35 +252,36 @@ class BoostClassifier(object):
 # ## Run some experiments
 # 
 # Call the `testClassifier` and `plotBoundary` functions for this part.
+        
 
 
 testClassifier(BoostClassifier(BayesClassifier(), T=10), dataset='iris',split=0.7)
 
 
 
-#testClassifier(BoostClassifier(BayesClassifier(), T=10), dataset='vowel',split=0.7)
+testClassifier(BoostClassifier(BayesClassifier(), T=10), dataset='vowel',split=0.7)
 
 
 
-plotBoundary(BoostClassifier(BayesClassifier()), dataset='iris',split=0.7)
+#plotBoundary(BoostClassifier(BayesClassifier(), T=10), dataset='iris',split=0.7)
 
 
 # Now repeat the steps with a decision tree classifier.
 
 
-#testClassifier(DecisionTreeClassifier(), dataset='iris', split=0.7)
+testClassifier(DecisionTreeClassifier(), dataset='iris', split=0.7)
 
 
 
-#testClassifier(BoostClassifier(DecisionTreeClassifier(), T=10), dataset='iris',split=0.7)
+testClassifier(BoostClassifier(DecisionTreeClassifier(), T=10), dataset='iris',split=0.7)
 
 
 
-#testClassifier(DecisionTreeClassifier(), dataset='vowel',split=0.7)
+testClassifier(DecisionTreeClassifier(), dataset='vowel',split=0.7)
 
 
 
-#testClassifier(BoostClassifier(DecisionTreeClassifier(), T=10), dataset='vowel',split=0.7)
+testClassifier(BoostClassifier(DecisionTreeClassifier(), T=10), dataset='vowel',split=0.7)
 
 
 
@@ -301,29 +297,29 @@ plotBoundary(BoostClassifier(BayesClassifier()), dataset='iris',split=0.7)
 # Note that this part of the assignment is completely voluntary! First, let's check how a boosted decision tree classifier performs on the olivetti data. Note that we need to reduce the dimension a bit using PCA, as the original dimension of the image vectors is `64 x 64 = 4096` elements.
 
 
-#testClassifier(BayesClassifier(), dataset='olivetti',split=0.7, dim=20)
+testClassifier(BayesClassifier(), dataset='olivetti',split=0.7, dim=20)
 
 
 
-#testClassifier(BoostClassifier(DecisionTreeClassifier(), T=10), dataset='olivetti',split=0.7, dim=20)
+testClassifier(BoostClassifier(DecisionTreeClassifier(), T=10), dataset='olivetti',split=0.7, dim=20)
 
 
 # You should get an accuracy around 70%. If you wish, you can compare this with using pure decision trees or a boosted bayes classifier. Not too bad, now let's try and classify a face as belonging to one of 40 persons!
 
 
-#X,y,pcadim = fetchDataset('olivetti') # fetch the olivetti data
-#xTr,yTr,xTe,yTe,trIdx,teIdx = trteSplitEven(X,y,0.7) # split into training and testing
-#pca = decomposition.PCA(n_components=20) # use PCA to reduce the dimension to 20
-#pca.fit(xTr) # use training data to fit the transform
-#xTrpca = pca.transform(xTr) # apply on training data
-#xTepca = pca.transform(xTe) # apply on test data
+X,y,pcadim = fetchDataset('olivetti') # fetch the olivetti data
+xTr,yTr,xTe,yTe,trIdx,teIdx = trteSplitEven(X,y,0.7) # split into training and testing
+pca = decomposition.PCA(n_components=20) # use PCA to reduce the dimension to 20
+pca.fit(xTr) # use training data to fit the transform
+xTrpca = pca.transform(xTr) # apply on training data
+xTepca = pca.transform(xTe) # apply on test data
 # use our pre-defined decision tree classifier together with the implemented
 # boosting to classify data points in the training data
-#classifier = BoostClassifier(DecisionTreeClassifier(), T=10).trainClassifier(xTrpca, yTr)
-#yPr = classifier.classify(xTepca)
-# choose a test point to visualize
-#testind = random.randint(0, xTe.shape[0]-1)
-# visualize the test point together with the training points used to train
+classifier = BoostClassifier(DecisionTreeClassifier(), T=10).trainClassifier(xTrpca, yTr)
+yPr = classifier.classify(xTepca)
+#choose a test point to visualize
+testind = random.randint(0, xTe.shape[0]-1)
+# visualize the test pioint together with the training points used to train
 # the class that the test point was classified to belong to
-#visualizeOlivettiVectors(xTr[yTr == yPr[testind],:], xTe[testind,:])
+visualizeOlivettiVectors(xTr[yTr == yPr[testind],:], xTe[testind,:])
 
